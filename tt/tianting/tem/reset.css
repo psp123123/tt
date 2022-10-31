@@ -1,0 +1,84 @@
+.clearfix::after{
+    content: "";
+    display: block;
+    clear: both;
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 0;
+}
+.header{
+    background: darkseagreen;
+    color:#999;
+    height: 40px;
+    line-height: 40px;
+}
+.header .topnav>li {
+    float: left;
+    margin: 0 20px;
+    background: aliceblue;
+    padding: 0 8px;
+    text-align: center;
+    width: 150px;
+    height: 40px;
+    box-sizing: border-box;
+    position: relative;
+}
+.header .topnav>li:hover{
+    background: lightblue;
+    border: 2px solid #ccc;
+    border-bottom: none;
+    line-height: 36px;
+}
+li {
+    list-style: none;
+}
+
+.header .topnav>li .submenu{
+    text-align: left;
+    line-height: 1.5;
+    width: 150px;
+    display: none;
+    border: 2px solid #ccc;
+    box-sizing: border-box;
+    position: absolute;
+    right: -2px;
+    background: white;
+}
+.header .topnav>li:hover .submenu{
+    display: block;
+}
+.header .topnav>li::after{
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    background: #fff;
+    bottom: 0;
+    left: 0;
+
+}
+/*包含以下四种的链接*/
+a {
+    text-decoration: none;
+}
+/*正常的未被访问过的链接*/
+a:link {
+    text-decoration: none;
+}
+/*已经访问过的链接*/
+a:visited {
+    text-decoration: none;
+}
+/*鼠标划过(停留)的链接*/
+a:hover {
+    text-decoration: none;
+}
+/* 正在点击的链接*/
+a:active {
+    text-decoration: none;
+}
+
+
+
+

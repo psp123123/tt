@@ -1,0 +1,18 @@
+{
+    "city":"yizhuang",
+    "name":"亦庄",
+    "type":"city",
+    "v2xsignalroadmap": "input/yizhuang/v2xsignalroadmap.json",
+    "trafficflow": "input/yizhuang/trafficflow.geojson",
+    "cross2junction": "input/yizhuang/cross2junction.json",
+    "traffic": "input/yizhuang/traffic.json",
+    "alarmCentral": "input/yizhuang/geojson/alarm_central.geojson",
+    "crossmap": {
+        "junction": "input/yizhuang/crossmap/cross-junction.geojson",
+        "lane": "input/yizhuang/crossmap/cross-lane-central.geojson",
+        "stopline": "input/yizhuang/crossmap/cross-stopline.geojson"
+    },
+    "HdMap":[
+            "input/yizhuang/hdmap-ChengDuGaoXinQu_1.10.26.7.pb"
+        ]
+}
