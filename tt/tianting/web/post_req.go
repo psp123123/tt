@@ -45,7 +45,7 @@ func InsertHostPost(c *gin.Context) {
 	H_disk := c.PostForm("H_disk")
 	fmt.Printf("得到浏览器请求的IP信息：H_host=%vH_hostname=%vH_core=%vH_free=%vH_disk=%v", H_host, H_hostname, H_core, H_free, H_disk)
 	ret_conn := Conn.InitDB()
-	fmt.Printf("调用mysql信息：", ret_conn)
+	fmt.Printf("调用mysql信息：%v\n", ret_conn)
 	ret := Conn.InsertHostData(H_host, H_hostname, H_core, H_free, H_disk)
 	fmt.Println("mysql 数据库插入后的返回结果id", ret)
 	c.Request.Method = "GET"
