@@ -63,12 +63,16 @@
                // data.id = 111;
                 //return false;
                 $.ajax({
-                    url: '/insert',
+                    url: '/insert_one',
                     type: "POST",
                     data: data.field,
                     success: function (data) {
                         layer.msg("提交成功")
-
+                        // layer.close();
+                        var iframeIndex = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(iframeIndex);
+                        parent.layer.refrens()
+                        console.log(layui);
                        // 
                     }
                
@@ -81,7 +85,7 @@
             }, function () {
 
                 // 关闭弹出层
-                layer.close(index);
+                //layer.close(index);
 
                 var iframeIndex = parent.layer.getFrameIndex(window.name);
                 parent.layer.close(iframeIndex);

@@ -25,7 +25,7 @@ func main() {
 
 	//r.POST("/install", Web.InstallPost)
 	r.POST("/post_context", conn.JudgePing)
-	r.POST("/insert", Web.InsertHostPost)
+	r.POST("/insert_one", Web.InsertHostPost)
 	r.POST("/del_host_one", Web.Del_host_one)
 
 	r.POST("/submit", Web.Submit)

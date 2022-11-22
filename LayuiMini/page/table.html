@@ -113,23 +113,28 @@
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
             var result = JSON.stringify(data.field);
+            console.log(111, data, result)
             layer.alert(result, {
                 title: '最终的搜索信息'
             });
 
             //执行搜索重载
+            reloadTable();
+
+            return false;
+        });
+
+
+        function reloadTable(){
             table.reload('currentTableId', {
                 page: {
                     curr: 1
                 }
                 , where: {
-                    searchParams: result
+                    // searchParams: result
                 }
             }, 'data');
-
-            return false;
-        });
-
+        }
         /**
          * toolbar监听事件
          */
@@ -144,6 +149,10 @@
                     area: ['100%', '100%'],
                     content: 'table/add.html',
                 });
+                layer.refrens = function () {
+                    console.log('rrrrrrrrrr');
+                    reloadTable();
+                }
                 $(window).on("resize", function () {
                     layer.full(index);
                 });
@@ -189,7 +198,8 @@
             index
         }
         var id = data.H_id
-        var url = 'http://192.168.56.11/del_host_one'
+        //var url = 'http://192.168.56.11/del_host_one'
+        var url = 'http://47.93.37.151/del_host_one'
         $.ajax({
             url: url + '?H_id=' + index ,
             type:'get',
