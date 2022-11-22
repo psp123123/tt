@@ -127,17 +127,26 @@
             });
             layer.tips('温馨提示：请注意开关状态的文字可以随意定义，而不仅仅是ON|OFF', data.othis)
         });
-
+        var form = layui.form,
+            layer = layui.layer,
+            $ = layui.$;
         //监听提交
-        form.on('submit(demo1)', function (data) {
-           
-            layer.alert(JSON.stringify(data.field), {
-                type:"post",
+        form.on('submit(demo2)', function (data) {
+            console.log(data.field);
+            var index = layer.alert(JSON.stringify(data.field), {
                 title: '最终的提交信息'
-            })
-            return false;
-        });
+            }, function () {
+                console.log(data.field);
+                // 关闭弹出层
+                layer.close(index);
 
+                var iframeIndex = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(iframeIndex);
+
+            });
+            //return false;
+        });
+    
         //表单初始赋值
         form.val('example', {
             "username": "贤心" // "name": "value"

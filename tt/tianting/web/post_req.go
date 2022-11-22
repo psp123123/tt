@@ -2,11 +2,9 @@ package Web
 
 import (
 	"fmt"
-	"net/http"
 	"tianting/comm"
 	Conn "tianting/conn"
 	_ "tianting/conn"
-	"tianting/fpm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -77,13 +75,13 @@ func Submit(c *gin.Context) {
 			"message": "Post Data Err",
 		})
 	} else {
-		install_res, rpm_file_path := fpm.Install(configBody.SoftwareName, configBody.Mode, configBody.Version, configBody.Path, configBody.Config)
-		c.JSON(http.StatusOK, gin.H{
-			"SoftwareName": configBody.SoftwareName,
-			"Mode":         configBody.Mode,
-			"源文件下载路径是":     install_res,
-			"制作完成的路径是":     rpm_file_path,
-		})
+		//install_res, rpm_file_path := fpm.Install(configBody.SoftwareName, configBody.Mode, configBody.Version, configBody.Path, configBody.Config)
+		// c.JSON(http.StatusOK, gin.H{
+		// 	"SoftwareName": configBody.SoftwareName,
+		// 	"Mode":         configBody.Mode,
+		// 	"源文件下载路径是":     install_res,
+		// 	"制作完成的路径是":     rpm_file_path,
+		// })
 		c.Request.Method = "GET"
 		c.Request.URL.Path = "192.168.56.11/#/page/table.html"
 	}
