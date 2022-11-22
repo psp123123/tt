@@ -27,6 +27,7 @@ func main() {
 	r.POST("/post_context", conn.JudgePing)
 	r.POST("/insert_one", Web.InsertHostPost)
 	r.POST("/del_host_one", Web.Del_host_one)
+	r.POST("/heartbeat", Web.Heartbeat)
 
 	r.POST("/submit", Web.Submit)
 	//r.GET("/ws",Web.WebSocket)

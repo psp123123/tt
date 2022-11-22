@@ -3,6 +3,7 @@ package Web
 import (
 	"fmt"
 	"tianting/comm"
+	"tianting/conn"
 	Conn "tianting/conn"
 	_ "tianting/conn"
 
@@ -85,5 +86,30 @@ func Submit(c *gin.Context) {
 		c.Request.Method = "GET"
 		c.Request.URL.Path = "192.168.56.11/#/page/table.html"
 	}
+
+}
+
+func Heartbeat(c *gin.Context) {
+	type DataStruct struct {
+		Ip string `json:"ip" form:"ip"`
+		Id string `json:"id" form:"id"`
+	}
+	var postData DataStruct
+	err := c.Bind(&postData)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"err_no":  401,
+			"message": "Client post error",
+		})
+	} else {
+		result := conn.InitRedisConn(postData.Ip, "1")
+		fmt.Printf("get redis func result is:%v\n", result)
+		c.JSON(200, gin.H{
+			"message": result,
+		})
+	}
+	log.Debug("------------------->得到的post表单%v", string(c.ContentType()))
+	log.Debug("------------------->得到IP:%T", postData.Ip)
+	log.Debug("------------------->得到ID:%v", postData.Id)
 
 }
