@@ -22,6 +22,11 @@ func main() {
 	r.GET("/host_list", Web.Host_list)
 	r.GET("/host_list_all", Web.Host_list_all)
 	r.GET("/del_host_one", Web.Del_host_one)
+	//ws协议
+	r.GET("/ws", Web.GetWsMes)
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(200, "page/wspush.html", nil)
+	})
 
 	//r.POST("/install", Web.InstallPost)
 	r.POST("/post_context", conn.JudgePing)
