@@ -3,6 +3,7 @@ package Web
 import (
 	"net/http"
 	"strconv"
+	"tianting/fpm"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,15 +37,30 @@ func GetWsMes(c *gin.Context) {
 		Num := 0
 		for {
 			Num = Num + 1
-			message := []byte(string(message) + " " + strconv.Itoa(Num))
+			EndStr := "start"
+			if Num > 10 {
+				EndStr = "End"
+			}
+			//需要返回给浏览器的数据ResPonseMes,后续数据类型为[]byte(string(message) + " " + strconv.Itoa(count))
+			//1. 下载判断值并返回给浏览器
+			fpm.Install
+			//如果值为End，则数据发送完毕,调用函数返回需要对end字符做处理
+			ResPonseMes := []byte(strconv.Itoa(Num))
 			log.Debug("数据更新为%v", Num)
-			err = ws.WriteMessage(mt, message)
+			err = ws.WriteMessage(mt, ResPonseMes)
 			if err != nil {
 				log.Debug("write:", err)
-				break
+				ws.Close()
 			}
-			log.Debug("reponse data is %s----%v", message, mt)
+			//log.Debug("reponse data is %s----%v", ResPonseMes, mt)
 			time.Sleep(time.Second)
+			if string(EndStr) == "End" {
+				log.Debug("end string is %v", EndStr)
+
+				ws.Close()
+				break
+
+			}
 		}
 
 	}

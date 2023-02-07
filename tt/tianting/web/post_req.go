@@ -2,10 +2,12 @@ package Web
 
 import (
 	"fmt"
+	"net/http"
 	"tianting/comm"
 	"tianting/conn"
 	Conn "tianting/conn"
 	_ "tianting/conn"
+	"tianting/fpm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -65,9 +67,12 @@ func Submit(c *gin.Context) {
 	var configBody Configs
 	err := c.Bind(&configBody)
 	// 判断json请求数据结构与定义的结构体有没有绑定成功
-	log.Debug("------------------->得到的post表单%v", string(c.ContentType()))
+	log.Debug("------------------->得到的post表单类型%v", string(c.ContentType()))
 	log.Debug("------------------->得到SoftName:%v", configBody.SoftwareName)
-	log.Debug("------------------->得到SoftPath:%v", configBody.Path)
+	log.Debug("------------------->得到安装路径:%v", configBody.Path)
+	log.Debug("------------------->得到配置文件路径:%v", configBody.Config)
+	log.Debug("------------------->得到版本号:%v", configBody.Version)
+	log.Debug("------------------->得到部署方式:%v", configBody.Mode)
 	c.Request.Method = "GET"
 	c.Request.URL.Path = "/host_list_all"
 	if err != nil {
@@ -76,13 +81,13 @@ func Submit(c *gin.Context) {
 			"message": "Post Data Err",
 		})
 	} else {
-		//install_res, rpm_file_path := fpm.Install(configBody.SoftwareName, configBody.Mode, configBody.Version, configBody.Path, configBody.Config)
-		// c.JSON(http.StatusOK, gin.H{
-		// 	"SoftwareName": configBody.SoftwareName,
-		// 	"Mode":         configBody.Mode,
-		// 	"源文件下载路径是":     install_res,
-		// 	"制作完成的路径是":     rpm_file_path,
-		// })
+		install_res, rpm_file_path := fpm.Install(configBody.SoftwareName, configBody.Mode, configBody.Version, configBody.Path, configBody.Config)
+		c.JSON(http.StatusOK, gin.H{
+			"SoftwareName": configBody.SoftwareName,
+			"Mode":         configBody.Mode,
+			"源文件下载路径是":     install_res,
+			"制作完成的路径是":     rpm_file_path,
+		})
 		c.Request.Method = "GET"
 		c.Request.URL.Path = "192.168.56.11/#/page/table.html"
 	}
