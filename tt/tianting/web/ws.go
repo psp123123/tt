@@ -3,7 +3,6 @@ package Web
 import (
 	"net/http"
 	"strconv"
-	"tianting/fpm"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -43,7 +42,7 @@ func GetWsMes(c *gin.Context) {
 			}
 			//需要返回给浏览器的数据ResPonseMes,后续数据类型为[]byte(string(message) + " " + strconv.Itoa(count))
 			//1. 下载判断值并返回给浏览器
-			fpm.Install
+			//fpm.Install
 			//如果值为End，则数据发送完毕,调用函数返回需要对end字符做处理
 			ResPonseMes := []byte(strconv.Itoa(Num))
 			log.Debug("数据更新为%v", Num)

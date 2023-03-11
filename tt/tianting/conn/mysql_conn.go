@@ -52,7 +52,7 @@ func InitDB() (err error) {
 func InsertHostData(H_host, H_hostname, H_core, H_free, H_disk string) interface{} {
 	InitDB()
 
-	sqlStr := "insert into host(H_host, H_hostname, H_core, H_free, H_disk) values(?,?,?,?,?);"
+	sqlStr := "insert into host(H_host, H_hostname, H_core, H_free, H_disk, H_status) values(?,?,?,?,?,0);"
 
 	ret, err := db.Exec(sqlStr, H_host, H_hostname, H_core, H_free, H_disk)
 	if err != nil {
