@@ -13,43 +13,6 @@
 <div class="layuimini-container">
     <div class="layuimini-main">
 
-        <!-- <fieldset class="table-search-fieldset">
-            <legend>搜索信息</legend>
-            <div style="margin: 10px 10px 10px 10px">
-                <form class="layui-form layui-form-pane" action="">
-                    <div class="layui-form-item">
-                        <div class="layui-inline">
-                            <label class="layui-form-label">用户姓名</label>
-                            <div class="layui-input-inline">
-                                <input type="text" name="username" autocomplete="off" class="layui-input">
-                            </div>
-                        </div>
-                        <div class="layui-inline">
-                            <label class="layui-form-label">用户性别</label>
-                            <div class="layui-input-inline">
-                                <input type="text" name="sex" autocomplete="off" class="layui-input">
-                            </div>
-                        </div>
-                        <div class="layui-inline">
-                            <label class="layui-form-label">用户城市</label>
-                            <div class="layui-input-inline">
-                                <input type="text" name="city" autocomplete="off" class="layui-input">
-                            </div>
-                        </div>
-                        <div class="layui-inline">
-                            <label class="layui-form-label">用户职业</label>
-                            <div class="layui-input-inline">
-                                <input type="text" name="classify" autocomplete="off" class="layui-input">
-                            </div>
-                        </div>
-                        <div class="layui-inline">
-                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </fieldset> -->
-
         <script type="text/html" id="toolbarDemo">
             <div class="layui-btn-container">
                 <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加 </button>
@@ -66,119 +29,135 @@
 
     </div>
 </div>
+
 <script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
 <script>
-    layui.use(['form', 'table'], function () {
+    layui.use(['form', 'table', 'jquery'], function () {
         var $ = layui.jquery,
             form = layui.form,
             table = layui.table;
 
+        // 获取状态数据并返回对应的图标HTML
+        function getStatusIcon(status) {
+            return status === 1
+                ? '<i class="layui-icon layui-icon-circle" style="color: green;"></i>'
+                : '<i class="layui-icon layui-icon-circle" style="color: red;"></i>';
+        }
+
+        // 渲染表格
         table.render({
             elem: '#currentTableId',
-          // elem: '#project-table', 
-           //url: '../api/table.json',
-           url: '/host_list_all',
-           //data: data,
+            url: '/tt-api/host_list_all',
             toolbar: '#toolbarDemo',
-            defaultToolbar: ['filter', 'exports', 'print', {
-                title: '提示',
-                layEvent: 'LAYTABLE_TIPS',
-                icon: 'layui-icon-tips'
-            }],
             cols: [[
-               {type: "checkbox", width: 50},
+                {type: "checkbox", width: 50},
                 {field: 'H_id', width: 80, title: 'ID', sort: true},
                 {field: 'H_host', width: 170, title: 'H_host'},
                 {field: 'H_hostname', width: 80, title: '主机名', sort: true},
                 {field: 'H_core', width: 80, title: '核数'},
                 {field: 'H_free', width: 80, title: '内存'},
-                {field: 'H_disk', width: 80,title: '磁盘'},                
-                {field: 'H_status', width: 135, title: 'H_status',templet:function (H_status) {
-                    var v = H_status.H_status;
-                    if (v==0){
-                        return '<i class="layui-icon layui-icon-circle "></i>';
-                    }else{
-                        return '<i class="layui-icon layui-icon-radio "></i>'
+                {field: 'H_disk', width: 80, title: '磁盘'},
+                {
+                    field: 'H_status',
+                    width: 135,
+                    title: 'H_status',
+                    templet: function (d) {
+                        return getStatusIcon(d.H_status); // 使用获取图标的函数
                     }
-                }},
-              
+                },
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
-            limits: [10, 15, 20, 25, 50, 100 ],
+            limits: [10, 15, 20, 25, 50, 100],
             limit: 15,
-           page: false,
-            skin: 'line'
+            page: false, // 禁用分页
+            skin: 'line',
+            done: function (res, curr, count) {
+                console.log('Table Render Done:', res); // 调试输出
+            }
         });
+
+        // WebSocket连接
+        var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        var wsUrl = protocol + '//' + window.location.host + '/ws';
+        var ws = new WebSocket(wsUrl);
+
+        ws.onopen = function () {
+            console.log('WebSocket connection established');
+        };
+
+        ws.onmessage = function (event) {
+            var statusData = JSON.parse(event.data);
+            updateStatusIcon(statusData.H_id, statusData.H_status);
+        };
+
+        function updateStatusIcon(hId, status) {
+            var statusIcon = getStatusIcon(status);
+            var rowIndex = tableIndexByHId(hId);
+            if (rowIndex !== -1) {
+                table.cache['currentTableId'][rowIndex].H_status = status;
+                table.reload('currentTableId', { data: table.cache['currentTableId'] });
+            }
+        }
+
+        function tableIndexByHId(hId) {
+            return table.cache['currentTableId'].findIndex(function (item) {
+                return item.H_id === hId;
+            });
+        }
 
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
             var result = JSON.stringify(data.field);
-            console.log(111, data, result)
             layer.alert(result, {
                 title: '最终的搜索信息'
             });
-
-            //执行搜索重载
             reloadTable();
-
             return false;
         });
 
-
-        function reloadTable(){
+        function reloadTable() {
             table.reload('currentTableId', {
-                page: {
-                    curr: 1
-                }
-                , where: {
-                    // searchParams: result
-                }
+                page: false, // 禁用分页
+                where: {}
             }, 'data');
         }
-        /**
-         * toolbar监听事件
-         */
+
         table.on('toolbar(currentTableFilter)', function (obj) {
-            if (obj.event === 'add') {  // 监听添加操作
+            if (obj.event === 'add') {
                 var index = layer.open({
                     title: '添加节点',
                     type: 2,
                     shade: 0.2,
-                    maxmin:true,
+                    maxmin: true,
                     shadeClose: true,
                     area: ['100%', '100%'],
                     content: 'table/add.html',
+                    end: function () {
+                        reloadTable(); // 关闭弹出框后刷新表格
+                    }
                 });
-                layer.refrens = function () {
-                    console.log('rrrrrrrrrr');
-                    reloadTable();
-                }
                 $(window).on("resize", function () {
                     layer.full(index);
                 });
-            } else if (obj.event === 'delete') {  // 监听删除操作
-                var checkStatus = table.checkStatus('currentTableId')
-                    , data = checkStatus.data;
+            } else if (obj.event === 'delete') {
+                var checkStatus = table.checkStatus('currentTableId'),
+                    data = checkStatus.data;
                 layer.alert(JSON.stringify(data));
-          
-                
             }
         });
 
-        //监听表格复选框选择
         table.on('checkbox(currentTableFilter)', function (obj) {
-            console.log(obj)
+            console.log(obj);
         });
 
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'edit') {
-
                 var index = layer.open({
                     title: '编辑节点',
                     type: 2,
                     shade: 0.2,
-                    maxmin:true,
+                    maxmin: true,
                     shadeClose: true,
                     area: ['100%', '100%'],
                     content: '../page/table/edit.html',
@@ -189,55 +168,37 @@
                 return false;
             } else if (obj.event === 'delete') {
                 layer.confirm('真的删除行么', function (index) {
-                    //删除代码
-                deleteByHid(data.H_id)
-                
-                function deleteByHid(index){
-        var $ = layui.$;
-        var data = {
-            index
-        }
-        var id = data.H_id
-        //var url = 'http://192.168.56.11/del_host_one'
-        var url = 'http://47.93.37.151/del_host_one'
-        $.ajax({
-            url: url + '?H_id=' + index ,
-            type:'get',
-           // data:{'H_id':data.H_id},//向服务端发送删除的id
-            success:function(suc){
-                if(suc==200){
-                    obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
-                    layer.close(index);
-                    console.log(index);
-                    layer.msg("删除成功",{icon:1});
-                    return false;
-                    
-                }
-                else{
-                    layer.msg("删除--失败",{icon:5});
-                }
-                 //执行搜索重载
-            // table.reload('currentTableId', {
-            //     page: {
-            //         curr: 1
-            //     }
-            //     , where: {
-            //         searchParams: result
-            //     }
-            // }, 'data');
-            }
-        });
-    }
-              
-                //删除代码
-                   // obj.del();
+                    deleteByHid(data.H_id);
                     layer.close(index);
                 });
             }
         });
 
-    });
+        // 根据ID删除数据的函数
+        function deleteByHid(id) {
+            const baseUrl = window.location.origin;
+            const deleteUrl = `${baseUrl}/del_host_one`;
 
+            $.ajax({
+                url: deleteUrl,
+                type: 'GET',
+                data: { H_id: id },
+                success: function (response) {
+                    if (response.status === 200 || response === 200 || response.success) {
+                        layer.msg("删除成功", { icon: 1 });
+                        setTimeout(function () {
+                            reloadTable();
+                        }, 1000);
+                    } else {
+                        layer.msg("删除失败，请重试", { icon: 5 });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    layer.msg("删除请求失败: " + error, { icon: 5 });
+                }
+            });
+        }
+    });
 </script>
 
 </body>
