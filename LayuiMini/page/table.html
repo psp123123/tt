@@ -73,131 +73,136 @@
             skin: 'line',
             done: function (res, curr, count) {
                 console.log('Table Render Done:', res); // 调试输出
-            }
-        });
+                // WebSocket连接
+                var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                var wsUrl = protocol + '//' + window.location.host + '/ws';
+                var ws = new WebSocket(wsUrl);
 
-        // WebSocket连接
-        var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        var wsUrl = protocol + '//' + window.location.host + '/ws';
-        var ws = new WebSocket(wsUrl);
+                ws.onopen = function () {
+                    console.log('WebSocket connection established');
+                    // 发送所有ID到后端
+                    var ids = res.data.map(item => item.H_id); // 从表格数据中提取H_id
+                    ws.send(JSON.stringify({ ids: ids })); // 发送ID数组
+                };
 
-        ws.onopen = function () {
-            console.log('WebSocket connection established');
-        };
+                ws.onmessage = function (event) {
+                    var hosts = JSON.parse(event.data);
+                    // 更新表格中的状态
+                    hosts.forEach(function (host) {
+                        updateStatusIcon(host.H_id, host.H_status);
+                    });
+                };
 
-        ws.onmessage = function (event) {
-            var statusData = JSON.parse(event.data);
-            updateStatusIcon(statusData.H_id, statusData.H_status);
-        };
-
-        function updateStatusIcon(hId, status) {
-            var statusIcon = getStatusIcon(status);
-            var rowIndex = tableIndexByHId(hId);
-            if (rowIndex !== -1) {
-                table.cache['currentTableId'][rowIndex].H_status = status;
-                table.reload('currentTableId', { data: table.cache['currentTableId'] });
-            }
-        }
-
-        function tableIndexByHId(hId) {
-            return table.cache['currentTableId'].findIndex(function (item) {
-                return item.H_id === hId;
-            });
-        }
-
-        // 监听搜索操作
-        form.on('submit(data-search-btn)', function (data) {
-            var result = JSON.stringify(data.field);
-            layer.alert(result, {
-                title: '最终的搜索信息'
-            });
-            reloadTable();
-            return false;
-        });
-
-        function reloadTable() {
-            table.reload('currentTableId', {
-                page: false, // 禁用分页
-                where: {}
-            }, 'data');
-        }
-
-        table.on('toolbar(currentTableFilter)', function (obj) {
-            if (obj.event === 'add') {
-                var index = layer.open({
-                    title: '添加节点',
-                    type: 2,
-                    shade: 0.2,
-                    maxmin: true,
-                    shadeClose: true,
-                    area: ['100%', '100%'],
-                    content: 'table/add.html',
-                    end: function () {
-                        reloadTable(); // 关闭弹出框后刷新表格
+                function updateStatusIcon(hId, status) {
+                    var statusIcon = getStatusIcon(status);
+                    var rowIndex = tableIndexByHId(hId);
+                    if (rowIndex !== -1) {
+                        table.cache['currentTableId'][rowIndex].H_status = status;
+                        table.reload('currentTableId', { data: table.cache['currentTableId'] });
                     }
-                });
-                $(window).on("resize", function () {
-                    layer.full(index);
-                });
-            } else if (obj.event === 'delete') {
-                var checkStatus = table.checkStatus('currentTableId'),
-                    data = checkStatus.data;
-                layer.alert(JSON.stringify(data));
-            }
-        });
-
-        table.on('checkbox(currentTableFilter)', function (obj) {
-            console.log(obj);
-        });
-
-        table.on('tool(currentTableFilter)', function (obj) {
-            var data = obj.data;
-            if (obj.event === 'edit') {
-                var index = layer.open({
-                    title: '编辑节点',
-                    type: 2,
-                    shade: 0.2,
-                    maxmin: true,
-                    shadeClose: true,
-                    area: ['100%', '100%'],
-                    content: '../page/table/edit.html',
-                });
-                $(window).on("resize", function () {
-                    layer.full(index);
-                });
-                return false;
-            } else if (obj.event === 'delete') {
-                layer.confirm('真的删除行么', function (index) {
-                    deleteByHid(data.H_id);
-                    layer.close(index);
-                });
-            }
-        });
-
-        // 根据ID删除数据的函数
-        function deleteByHid(id) {
-            const baseUrl = window.location.origin;
-            const deleteUrl = `${baseUrl}/del_host_one`;
-
-            $.ajax({
-                url: deleteUrl,
-                type: 'GET',
-                data: { H_id: id },
-                success: function (response) {
-                    if (response.status === 200 || response === 200 || response.success) {
-                        layer.msg("删除成功", { icon: 1 });
-                        setTimeout(function () {
-                            reloadTable();
-                        }, 1000);
-                    } else {
-                        layer.msg("删除失败，请重试", { icon: 5 });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    layer.msg("删除请求失败: " + error, { icon: 5 });
                 }
-            });
-        }
+
+                function tableIndexByHId(hId) {
+                    return table.cache['currentTableId'].findIndex(function (item) {
+                        return item.H_id === hId;
+                    });
+                }
+
+                // 监听搜索操作
+                form.on('submit(data-search-btn)', function (data) {
+                    var result = JSON.stringify(data.field);
+                    layer.alert(result, {
+                        title: '最终的搜索信息'
+                    });
+                    reloadTable();
+                    return false;
+                });
+
+                function reloadTable() {
+                    table.reload('currentTableId', {
+                        page: false, // 禁用分页
+                        where: {}
+                    }, 'data');
+                }
+
+                table.on('toolbar(currentTableFilter)', function (obj) {
+                    if (obj.event === 'add') {
+                        var index = layer.open({
+                            title: '添加节点',
+                            type: 2,
+                            shade: 0.2,
+                            maxmin: true,
+                            shadeClose: true,
+                            area: ['100%', '100%'],
+                            content: 'table/add.html',
+                            end: function () {
+                                reloadTable(); // 关闭弹出框后刷新表格
+                            }
+                        });
+                        $(window).on("resize", function () {
+                            layer.full(index);
+                        });
+                    } else if (obj.event === 'delete') {
+                        var checkStatus = table.checkStatus('currentTableId'),
+                            data = checkStatus.data;
+                        layer.alert(JSON.stringify(data));
+                    }
+                });
+
+                table.on('checkbox(currentTableFilter)', function (obj) {
+                    console.log(obj);
+                });
+
+                table.on('tool(currentTableFilter)', function (obj) {
+                    var data = obj.data;
+                    if (obj.event === 'edit') {
+                        var index = layer.open({
+                            title: '编辑节点',
+                            type: 2,
+                            shade: 0.2,
+                            maxmin: true,
+                            shadeClose: true,
+                            area: ['100%', '100%'],
+                            content: '../page/table/edit.html',
+                        });
+                        $(window).on("resize", function () {
+                            layer.full(index);
+                        });
+                        return false;
+                    } else if (obj.event === 'delete') {
+                        layer.confirm('真的删除行么', function (index) {
+                            deleteByHid(data.H_id);
+                            layer.close(index);
+                        });
+                    }
+                });
+
+                // 根据ID删除数据的函数
+                function deleteByHid(id) {
+                    const baseUrl = window.location.origin;
+                    const deleteUrl = `${baseUrl}/del_host_one`;
+
+                    $.ajax({
+                        url: deleteUrl,
+                        type: 'GET',
+                        data: { H_id: id },
+                        success: function (response) {
+                            if (response.status === 200 || response === 200 || response.success) {
+                                layer.msg("删除成功", { icon: 1 });
+                                setTimeout(function () {
+                                    reloadTable();
+                                }, 1000);
+                            } else {
+                                layer.msg("删除失败，请重试", { icon: 5 });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            layer.msg("删除请求失败: " + error, { icon: 5 });
+                        }
+                    });
+                }
+            }
+        });
     });
 </script>
 
