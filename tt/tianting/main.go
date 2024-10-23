@@ -1,7 +1,7 @@
 package main
 
 import (
-	"tianting/conn"
+	Conn "tianting/conn"
 	Web "tianting/web"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +29,7 @@ func main() {
 	})
 
 	//r.POST("/install", Web.InstallPost)
-	r.POST("/post_context", conn.JudgePing)
+	r.POST("/post_context", Conn.JudgePing)
 	r.POST("/insert_one", Web.InsertHostPost)
 	r.POST("/del_host_one", Web.Del_host_one)
 	r.POST("/heartbeat", Web.Heartbeat)

@@ -1,210 +1,263 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
-    <title>layui</title>
+    <title>Host Management</title>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
     <link rel="stylesheet" href="../css/public.css" media="all">
-</head>
-<body>
-<div class="layuimini-container">
-    <div class="layuimini-main">
+    <style>
+        .layui-btn-container {
+            text-align: right;
+            margin-bottom: 10px;
+        }
 
-        <script type="text/html" id="toolbarDemo">
-            <div class="layui-btn-container">
+        .layui-table-cell {
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-circle {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .status-green {
+            background-color: green;
+        }
+
+        .status-red {
+            background-color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layuimini-container">
+        <div class="layuimini-main">
+
+            <div class="layui-btn-container" id="toolbarDemo">
                 <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加 </button>
                 <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除 </button>
             </div>
-        </script>
 
-        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
 
-        <script type="text/html" id="currentTableBar">
-            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
-            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
-        </script>
+            <script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+                <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+            </script>
 
+        </div>
     </div>
-</div>
 
-<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
-<script>
-    layui.use(['form', 'table', 'jquery'], function () {
-        var $ = layui.jquery,
-            form = layui.form,
-            table = layui.table;
+    <script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'table', 'jquery'], function () {
+            var $ = layui.jquery,
+                form = layui.form,
+                table = layui.table;
 
-        // 获取状态数据并返回对应的图标HTML
-        function getStatusIcon(status) {
-            return status === 1
-                ? '<i class="layui-icon layui-icon-circle" style="color: green;"></i>'
-                : '<i class="layui-icon layui-icon-circle" style="color: red;"></i>';
-        }
+            // 获取状态数据并返回对应的图标HTML
+            function getStatusIcon(status) {
+                console.log('Getting status icon for status:', status); // 调试输出
+                return status == 1
+                    ? '<div class="status-circle status-green"></div>'
+                    : '<div class="status-circle status-red"></div>';
+            }
 
-        // 渲染表格
-        table.render({
-            elem: '#currentTableId',
-            url: '/tt-api/host_list_all',
-            toolbar: '#toolbarDemo',
-            cols: [[
-                {type: "checkbox", width: 50},
-                {field: 'H_id', width: 80, title: 'ID', sort: true},
-                {field: 'H_host', width: 170, title: 'H_host'},
-                {field: 'H_hostname', width: 80, title: '主机名', sort: true},
-                {field: 'H_core', width: 80, title: '核数'},
-                {field: 'H_free', width: 80, title: '内存'},
-                {field: 'H_disk', width: 80, title: '磁盘'},
-                {
-                    field: 'H_status',
-                    width: 135,
-                    title: 'H_status',
-                    templet: function (d) {
-                        return getStatusIcon(d.H_status); // 使用获取图标的函数
+            // 渲染表格
+            table.render({
+                elem: '#currentTableId',
+                url: '/tt-api/host_list_all',
+                toolbar: '#toolbarDemo', // 这里的 ID 和实际按钮容器的 ID 匹配
+                cols: [[
+                    { type: "checkbox", width: 50 },
+                    // 用 LAY_INDEX 来呈现序号
+                    { field: 'index', title: '序号', width: 80, templet: function (d) { return d.LAY_INDEX; } },
+                    { field: 'H_id', title: 'ID', hide: true },  // 隐藏真实 ID，但保留数据，以便稍后进行操作
+                    { field: 'H_host', minWidth: 120, title: 'H_host' },
+                    { field: 'H_hostname', minWidth: 100, title: '主机名', sort: true },
+                    { field: 'H_core', minWidth: 80, title: '核数' },
+                    { field: 'H_free', minWidth: 80, title: '内存' },
+                    { field: 'H_disk', minWidth: 80, title: '磁盘' },
+                    {
+                        field: 'H_status',
+                        width: 100,
+                        title: 'H_status',
+                        templet: function (d) {
+                            return getStatusIcon(d.H_status); // 使用获取图标的函数
+                        }
+                    },
+                    { title: '操作', width: 150, toolbar: '#currentTableBar', align: "center" }
+                ]],
+                limits: [10, 15, 20, 25, 50, 100],
+                limit: 15,
+                page: false, // 禁用分页
+                skin: 'line',
+                done: function (res, curr, count) {
+                    console.log('Table Render Done:', res); // 调试输出
+                    // WebSocket连接
+                    var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    var wsUrl = protocol + '//' + window.location.host + '/ws';
+                    var ws = new WebSocket(wsUrl);
+
+                    ws.onopen = function () {
+                        console.log('WebSocket connection established');
+                        // 发送所有ID到后端
+                        var ids = res.data.map(item => item.H_id); // 从表格数据中提取H_id
+                        ws.send(JSON.stringify({ ids: ids })); // 发送ID数组
+                    };
+
+                    ws.onmessage = function (event) {
+                        var hosts = JSON.parse(event.data);
+                        // 更新表格中的状态
+                        hosts.forEach(function (host) {
+                            updateStatusIcon(host.id, host.H_status); // 确保JSON字段与数据结构匹配
+                        });
+                    };
+
+                    function updateStatusIcon(hId, status) {
+                        console.log('Updating status icon for H_id:', hId, 'to status:', status); // 调试输出
+                        var rowIndex = tableIndexByHId(hId);
+                        if (rowIndex !== -1) {
+                            table.cache['currentTableId'][rowIndex].H_status = status; // 在缓存中更新状态
+                            
+                            // Locate the corresponding row and cell by index
+                            var tableElement = $('div[lay-id="currentTableId"] .layui-table-body tbody tr').eq(rowIndex);
+                            tableElement.find('td[data-field="H_status"] div').html(getStatusIcon(status));
+
+                            console.log('Updated row', rowIndex, 'with new status:', getStatusIcon(status));
+                        }
                     }
-                },
-                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
-            ]],
-            limits: [10, 15, 20, 25, 50, 100],
-            limit: 15,
-            page: false, // 禁用分页
-            skin: 'line',
-            done: function (res, curr, count) {
-                console.log('Table Render Done:', res); // 调试输出
-                // WebSocket连接
-                var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                var wsUrl = protocol + '//' + window.location.host + '/ws';
-                var ws = new WebSocket(wsUrl);
 
-                ws.onopen = function () {
-                    console.log('WebSocket connection established');
-                    // 发送所有ID到后端
-                    var ids = res.data.map(item => item.H_id); // 从表格数据中提取H_id
-                    ws.send(JSON.stringify({ ids: ids })); // 发送ID数组
-                };
-
-                ws.onmessage = function (event) {
-                    var hosts = JSON.parse(event.data);
-                    // 更新表格中的状态
-                    hosts.forEach(function (host) {
-                        updateStatusIcon(host.H_id, host.H_status);
-                    });
-                };
-
-                function updateStatusIcon(hId, status) {
-                    var statusIcon = getStatusIcon(status);
-                    var rowIndex = tableIndexByHId(hId);
-                    if (rowIndex !== -1) {
-                        table.cache['currentTableId'][rowIndex].H_status = status;
-                        table.reload('currentTableId', { data: table.cache['currentTableId'] });
+                    function tableIndexByHId(hId) {
+                        return table.cache['currentTableId'].findIndex(function (item) {
+                            return item.H_id == hId;  // ID 可能是字符串，所以使用 ==
+                        });
                     }
-                }
 
-                function tableIndexByHId(hId) {
-                    return table.cache['currentTableId'].findIndex(function (item) {
-                        return item.H_id === hId;
-                    });
-                }
-
-                // 监听搜索操作
-                form.on('submit(data-search-btn)', function (data) {
-                    var result = JSON.stringify(data.field);
-                    layer.alert(result, {
-                        title: '最终的搜索信息'
-                    });
-                    reloadTable();
-                    return false;
-                });
-
-                function reloadTable() {
-                    table.reload('currentTableId', {
-                        page: false, // 禁用分页
-                        where: {}
-                    }, 'data');
-                }
-
-                table.on('toolbar(currentTableFilter)', function (obj) {
-                    if (obj.event === 'add') {
-                        var index = layer.open({
-                            title: '添加节点',
-                            type: 2,
-                            shade: 0.2,
-                            maxmin: true,
-                            shadeClose: true,
-                            area: ['100%', '100%'],
-                            content: 'table/add.html',
-                            end: function () {
-                                reloadTable(); // 关闭弹出框后刷新表格
-                            }
+                    // 监听搜索操作
+                    form.on('submit(data-search-btn)', function (data) {
+                        var result = JSON.stringify(data.field);
+                        layer.alert(result, {
+                            title: '最终的搜索信息'
                         });
-                        $(window).on("resize", function () {
-                            layer.full(index);
-                        });
-                    } else if (obj.event === 'delete') {
-                        var checkStatus = table.checkStatus('currentTableId'),
-                            data = checkStatus.data;
-                        layer.alert(JSON.stringify(data));
-                    }
-                });
-
-                table.on('checkbox(currentTableFilter)', function (obj) {
-                    console.log(obj);
-                });
-
-                table.on('tool(currentTableFilter)', function (obj) {
-                    var data = obj.data;
-                    if (obj.event === 'edit') {
-                        var index = layer.open({
-                            title: '编辑节点',
-                            type: 2,
-                            shade: 0.2,
-                            maxmin: true,
-                            shadeClose: true,
-                            area: ['100%', '100%'],
-                            content: '../page/table/edit.html',
-                        });
-                        $(window).on("resize", function () {
-                            layer.full(index);
-                        });
+                        reloadTable();
                         return false;
-                    } else if (obj.event === 'delete') {
-                        layer.confirm('真的删除行么', function (index) {
-                            deleteByHid(data.H_id);
-                            layer.close(index);
-                        });
+                    });
+
+                    function reloadTable() {
+                        table.reload('currentTableId', {
+                            page: false, // 禁用分页
+                            where: {}
+                        }, 'data');
                     }
-                });
 
-                // 根据ID删除数据的函数
-                function deleteByHid(id) {
-                    const baseUrl = window.location.origin;
-                    const deleteUrl = `${baseUrl}/del_host_one`;
-
-                    $.ajax({
-                        url: deleteUrl,
-                        type: 'GET',
-                        data: { H_id: id },
-                        success: function (response) {
-                            if (response.status === 200 || response === 200 || response.success) {
-                                layer.msg("删除成功", { icon: 1 });
-                                setTimeout(function () {
-                                    reloadTable();
-                                }, 1000);
-                            } else {
-                                layer.msg("删除失败，请重试", { icon: 5 });
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            layer.msg("删除请求失败: " + error, { icon: 5 });
+                    table.on('toolbar(currentTableFilter)', function (obj) {
+                        var checkStatus = table.checkStatus(obj.config.id);
+                        switch (obj.event) {
+                            case 'add':
+                                var index = layer.open({
+                                    title: '添加节点',
+                                    type: 2,
+                                    shade: 0.2,
+                                    maxmin: true,
+                                    shadeClose: true,
+                                    area: ['600px', '400px'],
+                                    content: 'table/add.html',
+                                    end: function () {
+                                        reloadTable(); // 关闭弹出框后刷新表格
+                                    }
+                                });
+                                $(window).on("resize", function () {
+                                    layer.full(index);
+                                });
+                                break;
+                            case 'delete':
+                                var data = checkStatus.data;
+                                if (data.length === 0) {
+                                    layer.msg('请选择需要删除的数据', { icon: 5 });
+                                    return;
+                                }
+                                var ids = data.map(function (item) { return item.H_id; });
+                                layer.confirm('真的删除选中的行么', function (index) {
+                                    ids.forEach(function (id) {
+                                        deleteByHid(id);
+                                    });
+                                    layer.close(index);
+                                });
+                                break;
                         }
                     });
+
+                    table.on('checkbox(currentTableFilter)', function (obj) {
+                        console.log(obj);
+                    });
+
+                    table.on('tool(currentTableFilter)', function (obj) {
+                        var data = obj.data;
+                        if (obj.event === 'edit') {
+                            var index = layer.open({
+                                title: '编辑节点',
+                                type: 2,
+                                shade: 0.2,
+                                maxmin: true,
+                                shadeClose: true,
+                                area: ['600px', '400px'],
+                                content: '../page/table/edit.html',
+                                end: function () {
+                                    reloadTable(); // 关闭弹出框后刷新表格
+                                }
+                            });
+                            $(window).on("resize", function () {
+                                layer.full(index);
+                            });
+                            return false;
+                        } else if (obj.event === 'delete') {
+                            layer.confirm('真的删除行么', function (index) {
+                                deleteByHid(data.H_id);
+                                layer.close(index);
+                            });
+                        }
+                    });
+
+                    // 根据ID删除数据的函数
+                    function deleteByHid(id) {
+                        const baseUrl = window.location.origin;
+                        const deleteUrl = `${baseUrl}/tt-api/del_host_one`;
+
+                        $.ajax({
+                            url: deleteUrl,
+                            type: 'GET',
+                            data: { H_id: id },
+                            success: function (response) {
+                                if (response.status === 200 || response === 200 || response.success) {
+                                    layer.msg("删除成功", { icon: 1 });
+                                    setTimeout(function () {
+                                        reloadTable();
+                                    }, 1000);
+                                } else {
+                                    layer.msg("删除失败，请重试", { icon: 5 });
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                layer.msg("删除请求失败: " + error, { icon: 5 });
+                            }
+                        });
+                    }
                 }
-            }
+            });
         });
-    });
-</script>
+    </script>
 
 </body>
+
 </html>

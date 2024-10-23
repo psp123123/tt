@@ -32,20 +32,44 @@ var db *sql.DB
 
 //var log comm.ConsoleLogger
 
-func InitDB() (err error) {
-	db, err = sql.Open("mysql", "root:123456@tcp(mysql-master:3306)/auto_deploy")
-	//db,err = sql.Open("mysql","root:123456@tcp(172.27.95.86:3306)/auto_deploy")
+// func InitDB() (err error) {
+// 	db, err = sql.Open("mysql", "root:123456@tcp(mysql-master:3306)/auto_deploy")
+// 	//db,err = sql.Open("mysql","root:123456@tcp(172.27.95.86:3306)/auto_deploy")
 
-	if err != nil {
-		fmt.Println("mysql connected failed!")
-		return
-	}
-	err = db.Ping()
-	if err != nil {
-		return
+// 	if err != nil {
+// 		fmt.Println("mysql connected failed!")
+// 		return
+// 	}
+// 	err = db.Ping()
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+
+// }
+
+// InitDB initializes the database connection
+func InitDB() (err error) {
+	if db == nil {
+		db, err = sql.Open("mysql", "root:123456@tcp(10.43.26.206:3306)/auto_deploy")
+		if err != nil {
+			log.Error("failed to open database: %v", err)
+			return
+		}
+
+		// Set connection pool settings
+		db.SetMaxOpenConns(25)   // 设置最大打开连接数
+		db.SetMaxIdleConns(25)   // 设置最大闲置连接数
+		db.SetConnMaxLifetime(0) // 连接可重用的最大时间
+
+		// Test the connection
+		if err = db.Ping(); err != nil {
+			log.Error("failed to connect to database: %v", err)
+			return
+		}
+		log.Debug("database connection established")
 	}
 	return
-
 }
 
 // 输入host信息
@@ -214,27 +238,35 @@ func GetDownLoadURL(SvcName string) string {
 }
 
 func GetHostContext(ID string) map[string]string {
-	InitDB()
+	InitDB() // Ensure DB is initialized
+
 	type HostContextStru struct {
-		H_host   string
-		H_status string
+		HHost   string
+		HStatus string
 	}
-	sqlstr := `select H_host,H_status from host where id=?`
+
+	sqlstr := `SELECT H_host, H_status FROM host WHERE id = ?`
 	var host HostContextStru
-	err := db.QueryRow(sqlstr, ID).Scan(&host.H_host, &host.H_status)
 
-	// errr := ret.Scan(&host.H_status)
+	// Execute SQL query
+	err := db.QueryRow(sqlstr, ID).Scan(&host.HHost, &host.HStatus)
 	if err != nil {
-		fmt.Printf("GetHostContext函数sql返回结果错误%v\n", err)
-
+		if err == sql.ErrNoRows {
+			log.Error("no rows found for id: %s", ID)
+			return nil
+		}
+		log.Error("error querying host context: %v", err)
+		return nil
 	}
-	HostContext := make(map[string]string)
-	HostContext["H_host"] = host.H_host
-	fmt.Printf("get map host :%#v\n", host.H_host)
-	HostContext["H_status"] = host.H_status
-	fmt.Printf("mysql get ret is :%v\n", HostContext)
-	return HostContext
 
+	HostContext := map[string]string{
+		"H_host":   host.HHost,
+		"H_status": host.HStatus,
+	}
+
+	// Debug output
+	//log.Debug("getHostContext: retrieved data %v", HostContext)
+	return HostContext
 }
 
 func GetHostContextAll() []map[string]string {
