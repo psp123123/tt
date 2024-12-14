@@ -51,7 +51,7 @@ var db *sql.DB
 // InitDB initializes the database connection
 func InitDB() (err error) {
 	if db == nil {
-		db, err = sql.Open("mysql", "root:123456@tcp(10.43.26.206:3306)/auto_deploy")
+		db, err = sql.Open("mysql", "root:123456@tcp(tt-mysql:3306)/auto_deploy")
 		if err != nil {
 			log.Error("failed to open database: %v", err)
 			return
